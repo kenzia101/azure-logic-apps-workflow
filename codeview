@@ -1,0 +1,120 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Condition": {
+                "actions": {
+                    "Send_an_email_(V2)": {
+                        "inputs": {
+                            "body": {
+                                "Body": "<p>Hi <br>\nyour request was approved<br>\n<br>\nThanks<br>\nappleeye</p>",
+                                "Importance": "Normal",
+                                "Subject": "request approval",
+                                "To": "appleeeyefarms@gmail.com"
+                            },
+                            "host": {
+                                "connection": {
+                                    "name": "@parameters('$connections')['outlook']['connectionId']"
+                                }
+                            },
+                            "method": "post",
+                            "path": "/v2/Mail"
+                        },
+                        "runAfter": {},
+                        "type": "ApiConnection"
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "Send_an_email_(V2)_2": {
+                            "inputs": {
+                                "body": {
+                                    "Body": "<p>Hi<br>\nyour request has been declined<br>\n<br>\nThanks<br>\nappleeye</p>",
+                                    "Importance": "Normal",
+                                    "Subject": "request decline",
+                                    "To": "appleeye@gmail.com"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['outlook']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/v2/Mail"
+                            },
+                            "runAfter": {},
+                            "type": "ApiConnection"
+                        }
+                    }
+                },
+                "expression": {
+                    "and": [
+                        {
+                            "equals": [
+                                "@body('Send_approval_email')?['SelectedOption']",
+                                "Approve"
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Send_approval_email": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "Send_approval_email": {
+                "inputs": {
+                    "body": {
+                        "Message": {
+                            "HideHTMLMessage": false,
+                            "Importance": "Normal",
+                            "Options": "Approve, Reject",
+                            "ShowHTMLConfirmationDialog": false,
+                            "Subject": "Approval Request from appleeye",
+                            "To": "appleeyefarms@gmail.com"
+                        },
+                        "NotificationUrl": "@{listCallbackUrl()}"
+                    },
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['outlook']['connectionId']"
+                        }
+                    },
+                    "path": "/approvalmail/$subscriptions"
+                },
+                "runAfter": {},
+                "type": "ApiConnectionWebhook"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "defaultValue": {},
+                "type": "Object"
+            }
+        },
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "schema": {}
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "value": {
+                "outlook": {
+                    "connectionId": "/subscriptions/97329611-009b-404b-82d9-3d38d0fabc7a/resourceGroups/NetworkWatcherRG/providers/Microsoft.Web/connections/outlook",
+                    "connectionName": "outlook",
+                    "id": "/subscriptions/97329611-009b-404b-82d9-3d38d0fabc7a/providers/Microsoft.Web/locations/eastus/managedApis/outlook"
+                }
+            }
+        }
+    }
+}
